@@ -1,0 +1,295 @@
+---
+title: How to Verify Payments With Webhooks
+description: Use Paystack webhooks to confirm payments automatically and troubleshoot common errors.
+---
+
+Receiving online payments from customers is only half the story. Verifying payments before delivering value is the other half, and it matters just as much. You don't want to expose your business to financial loss, fraud, or reconciliation headaches.
+
+Paystack offers two ways to verify payments: **calling the Verify API or listening for webhook events**. You can also use both.
+
+With the Verify API, you have to constantly call Paystack to get the status of every payment a customer initiates. This approach wastes CPU cycles and can easily trigger rate limits, especially as your transaction volume grows.
+
+Webhooks, on the other hand, simply mean Paystack calls your server when an event occurs, such as when a customer completes a payment successfully. This approach is recommended because it provides instant, automatic payment notifications.
+
+In this guide, you will learn how to use the Paystack webhook to verify payments and troubleshoot common errors you might encounter.
+
+## Prerequisites
+
+Ensure you have the following:
+
+- A code editor such as VS Code
+- Node 18+ installed on your local machine
+- A Paystack business account and an active secret key
+- Basic understanding of Express.js
+
+## How webhooks work
+
+Webhooks are instant notifications Paystack sends to your server when an event happens. In this case, it sends a `charge.success` event to your server when a customer completes a payment successfully.
+
+However, anyone can send a webhook event to your server. Before you deliver value, you must confirm the webhook event you receive is genuinely from Paystack by verifying its signature.
+
+**Here is what the flow looks like:**
+
+<Steps>
+  <Step title="Customer completes a payment">
+    The customer pays on the Paystack checkout page.
+  </Step>
+  <Step title="Paystack sends the event">
+    Paystack sends information about the event to your server, including the payment status, reference, amount, event signature, and other details.
+  </Step>
+  <Step title="Verify the signature">
+    Verify the event signature to confirm it is genuinely from Paystack. If the check fails, reject the event.
+  </Step>
+  <Step title="Acknowledge the event">
+    If the signature is valid, immediately send a 200 `OK` response.
+  </Step>
+  <Step title="Deliver value">
+    Update your database and deliver value to the customer.
+  </Step>
+</Steps>
+
+## How to verify payments
+
+<Note>
+  This guide assumes you have set up your initiate payment route with the Paystack `initiate payment` endpoint to accept payments.
+</Note>
+
+
+<Steps>
+<Step title="Create the webhook file">
+
+Create a new `webhook.js` file in your `controller` folder.
+
+</Step>
+
+<Step title="Verify the webhook signature">
+
+Create a `webhook` function that verifies the Paystack webhook signature.
+
+```javascript
+import crypto from "crypto";
+
+const webhook = (req, res) => {
+  const event = req.body;
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  const signature = req.headers["x-paystack-signature"];
+
+  const hash = crypto
+    .createHmac("sha512", secret)
+    .update(JSON.stringify(event))
+    .digest("hex");
+
+  if (hash !== signature) {
+    return res.status(401).json({ success: false, msg: "Invalid signature" });
+  }
+
+  // Acknowledge right away so Paystack doesn't retry
+  res.status(200).send("OK");
+};
+
+export { webhook };
+```
+
+In the code above:
+
+- **`crypto` import:** Loads Node.js's built-in cryptographic library to verify webhook signatures.
+- **`event`:** Retrieves the Paystack webhook payload via `req.body`. This payload provides all the necessary information about a payment, including the status, amount, reference, email, and more.
+- **`secret`:** Holds your Paystack secret key.
+- **`signature`:** Retrieves the Paystack webhook signature. This signature signifies that the webhook is genuinely from Paystack.
+- **`hash`:** Manually constructs the Paystack webhook signature using SHA-512, your secret key, and the event payload. This is exactly how Paystack creates every webhook signature it sends.
+- **`if`:** Checks whether the manually constructed signature matches Paystack's. If it doesn't match, the signature is invalid, so the event is rejected.
+- **`res.status`:** Acknowledges the event.
+
+</Step>
+
+<Step title="Retrieve the event and update your database">
+
+If the signature is valid, retrieve the webhook event and update your database.
+
+```javascript
+import crypto from "crypto";
+
+const webhook = (req, res) => {
+  const event = req.body;
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  const signature = req.headers["x-paystack-signature"];
+
+  const hash = crypto
+    .createHmac("sha512", secret)
+    .update(JSON.stringify(event))
+    .digest("hex");
+
+  if (hash !== signature) {
+    return res.status(401).json({ success: false, msg: "Invalid signature" });
+  }
+
+  // Acknowledge right away so Paystack doesn't retry
+  res.status(200).send("OK");
+
+  if (event.event === "charge.success") {
+    const { reference, amount, status } = event.data;
+    console.log(reference, status, amount);
+    // update database
+    // deliver value
+  }
+};
+
+export { webhook };
+```
+
+The second `if` block checks whether the Paystack event is `charge.success`, then retrieves the transaction amount, status, and reference from the event payload.
+
+</Step>
+
+<Step title="Set up the webhook route">
+
+Create a `webhook.js` file in your `route` folder.
+
+```javascript
+import express from "express";
+import { webhook } from "../controller/webhook.js";
+
+const webhookRoute = express.Router();
+
+webhookRoute.post("/webhook", webhook);
+
+export { webhookRoute };
+```
+
+</Step>
+
+<Step title="Register the route">
+
+Import the webhook route in your `index.js` file.
+
+```javascript
+import { webhookRoute } from "./route/webhook.js";
+
+app.use(express.json());
+app.use(webhookRoute);
+```
+
+</Step>
+</Steps>
+
+## Receive webhook events from Paystack
+
+To receive webhook events from Paystack, your webhook route (URL) must be publicly available. One fast workaround is to set up a temporary public URL using a Cloudflare Tunnel and add it to your Paystack dashboard.
+
+<Steps>
+<Step title="Install Cloudflared">
+
+On Windows, open PowerShell and run:
+
+```powershell
+winget install --id Cloudflare.cloudflared --source winget
+```
+
+On macOS, open Terminal and run:
+
+```bash
+brew install cloudflared
+```
+
+If you don't have Homebrew, install it from brew.sh first.
+
+You should see a success message when the installation finishes.
+
+</Step>
+
+<Step title="Confirm the installation">
+
+Run this command to confirm Cloudflared has been installed successfully.
+
+```bash
+cloudflared --version
+```
+
+</Step>
+
+<Step title="Start your app">
+
+```bash
+npm run start
+```
+
+</Step>
+
+<Step title="Get a temporary URL">
+
+Open a second terminal (PowerShell on Windows, Terminal on macOS) and run this command to get a temporary URL.
+
+```bash
+cloudflared tunnel --url http://localhost:5000
+```
+
+Replace `5000` with the port your app runs on.
+
+</Step>
+
+<Step title="Copy the URL">
+
+Copy the URL ending in `trycloudflare.com`.
+
+</Step>
+
+<Step title="Add the URL to Paystack">
+
+Log in to your [Paystack dashboard](https://dashboard.paystack.com/v2/), go to **Settings** > **API Keys & Webhooks**, and paste the URL.
+
+</Step>
+
+<Step title="Add the webhook path">
+
+Add the webhook path to the URL. For example:
+
+```text
+https://fiction-sell-goat-equivalent.trycloudflare.com/webhook
+```
+
+</Step>
+
+<Step title="Save your changes">
+
+Click **Save Changes**.
+
+</Step>
+
+<Step title="Test the webhook">
+
+Test the initiate payment route in Postman and complete the payment.
+![Initiate payment on Postman](/images/Initiate-payment-2.png)
+
+You should receive the webhook event in your terminal.
+
+![Webhook event output in terminal](/images/webhook-event-terminal.png)
+</Step>
+</Steps>
+
+## Troubleshoot common errors
+
+<Expandable title="Paystack doesn't send webhook events when customers complete payments">
+  **Possible causes:**
+
+  - You have not added your webhook URL to the Paystack dashboard.
+  - Your webhook URL points to `localhost`.
+  - Your webhook URL is not a POST endpoint.
+
+  **Fix:**
+
+  - Confirm you have set up your webhook URL in your Paystack dashboard.
+  - Ensure your webhook URL is publicly available and can receive events.
+  - Confirm your webhook URL is a POST endpoint.
+</Expandable>
+
+<Expandable title="Webhook verification fails even though the event is genuinely from Paystack">
+  **Possible causes:**
+
+  - Your secret key doesn't match the payment's mode.
+  - The request body was changed before hashing, or `express.json()` isn't registered before your webhook route.
+
+  **Fix:**
+
+  - Use the secret key for the same mode as the payment.
+  - Register `app.use(express.json())` before `app.use(webhookRoute)`, and don't modify the request body before hashing it.
+</Expandable>

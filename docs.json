@@ -1,6 +1,8 @@
 {
-  "theme": "default",
+  "theme": "sharp",
   "appearance": {
+    "default": "light",
+    "showToggle": true,
     "contentIcons": "accent"
   },
   "markdown": {
@@ -15,7 +17,12 @@
       }
     ]
   },
+  "fonts": {
+  "body": { "family": "DM Sans", "weight": ["400", "500", "600", "700"] },
+  "heading": { "family": "DM Sans", "weight": ["600", "700"] }
+  },
   "navbar": {
+    "logo":null,
     "primary": {
       "label": "Get started",
       "href": "/quickstart"
@@ -28,41 +35,19 @@
         {
           "group": "Get started",
           "pages": ["introduction", "quickstart"]
-        },
-        {
-          "group": "Design your docs",
-          "pages": ["components", "customization"]
         }
       ]
     },
     {
-      "tab": "Guides",
+      "tab": "How-to Guide",
       "groups": [
         {
-          "group": "Work with Thally",
+          "group": "First Guide",
           "pages": [
-            "guides/create-a-site",
-            "guides/work-with-the-cli",
-            "guides/connect-ai-tools"
+            "guides/verify-payments-with-webhooks"
           ]
         }
       ]
-    },
-    {
-      "tab": "API Reference",
-      "groups": [
-        {
-          "group": "Overview",
-          "pages": ["api/introduction", "api/authentication"]
-        }
-      ],
-      "api": {
-        "source": "openapi.yaml"
-      }
-    },
-    {
-      "tab": "Changelog",
-      "href": "/changelog"
     }
   ]
 }

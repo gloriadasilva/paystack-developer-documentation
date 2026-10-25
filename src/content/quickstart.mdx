@@ -1,47 +1,87 @@
 ---
 title: Quickstart
-description: Guide a new reader through one useful workflow and show them how to verify it.
+description: Receive your first payment with Paystack in minutes.
 ---
-
-A strong quickstart produces one meaningful result. Replace the placeholders
-below with the shortest supported path for your product.
 
 ## Before you begin
 
-List only the requirements needed for this workflow:
-
-- An account or credential, when required
-- A supported runtime, device, browser, or operating system
-- Permission to create or change the resource used in the example
+- Create a [Paystack business account](https://dashboard.paystack.com/v2/).
+- Log in and navigate to “settings” > “API&Webhooks” to generate your test secret key.
 
 <Steps>
-  <Step title="Install the required tool">
-    Give readers one recommended installation command.
+  <Step title="Initiate a payment">
+
+    Send a request to the Initialize Transaction endpoint. Replace `YOUR_TEST_SECRET_KEY` with your key.
 
     ```bash
-    npm install your-package
+    curl https://api.paystack.co/transaction/initialize \
+      -H "Authorization: Bearer YOUR_TEST_SECRET_KEY" \
+      -H "Content-Type: application/json" \
+      -X POST \
+      -d '{
+        "amount": 12000,
+        "email": "customer@example.com",
+        "reference": "ref-725b78ac-50a7-43ec-bbd3-c2ac519b0180"
+      }'
     ```
+
+    `amount` is in the smallest currency unit. 12000 kobo is ₦120.
+
+    **Response**:
+
+    ```json
+    {
+      "status": true,
+      "message": "Authorization URL created",
+      "data": {
+        "authorization_url": "https://checkout.paystack.com/ork5ztjq3p3vfx1",
+        "access_code": "ork5ztjq3p3vfx1",
+        "reference": "ref-725b78ac-50a7-43ec-bbd3-c2ac519b0180"
+      }
+    }
+    ```
+
   </Step>
-  <Step title="Add the minimum configuration">
-    Include only the values needed for the first successful run.
+
+  <Step title="Complete the payment">
+
+    Copy the `authorization_url` from the response, paste it into a browser to see the Paystack checkout page, and complete the payment.
+    ![Paystack checkout page](/images/paystack-checkout-page.png)
+  </Step>
+
+  <Step title="Verify the payment">
+
+    Use the `reference` from the first step to check the transaction status.
 
     ```bash
-    your-cli init
+    curl https://api.paystack.co/transaction/verify/ref-725b78ac-50a7-43ec-bbd3-c2ac519b0180 \
+      -H "Authorization: Bearer YOUR_TEST_SECRET_KEY"
     ```
-  </Step>
-  <Step title="Complete the first task">
-    Use a realistic example that produces an observable result.
 
-    ```bash
-    your-cli start
+    **Response (trimmed)**:
+
+    ```json
+    {
+      "status": true,
+      "message": "Verification successful",
+      "data": {
+        "status": "success",
+        "reference": "ref-725b78ac-50a7-43ec-bbd3-c2ac519b0180",
+        "amount": 12000,
+        "gateway_response": "Successful",
+        "paid_at": "2026-10-24T03:33:59.000Z",
+        "channel": "card",
+        "currency": "NGN",
+        "customer": {
+          "email": "customer@example.com"
+        }
+      }
+    }
     ```
-  </Step>
-  <Step title="Verify the result">
-    State exactly what the reader should see and how to recover when it does not appear.
+
+    `data.status` is the transaction status. `success` means the payment is complete.
+
   </Step>
 </Steps>
 
-## Choose the next task
-
-Link to the guide that naturally follows this result. Avoid ending the reader’s
-journey with a generic list of every feature.
+To receive payment notifications automatically, see [How to Verify Payments With Webhooks](/guides/verify-payments-with-webhooks).
