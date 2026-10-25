@@ -48,6 +48,17 @@
           ]
         }
       ]
+    },
+    {
+      "tab": "Articles",
+      "groups": [
+        {
+          "group": "First Article",
+          "pages": [
+            "articles/thally-documentation-site-tutorial"
+          ]
+        }
+      ]
     }
   ]
 }

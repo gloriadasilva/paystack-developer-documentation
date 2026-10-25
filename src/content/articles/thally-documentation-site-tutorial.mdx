@@ -1,0 +1,327 @@
+---
+title: How to Build a Documentation Site With Thally
+description: Build, customize, and publish a documentation site with Thally.
+---
+
+Thally is a documentation platform that keeps your content in a GitHub repository you own, as MDX files, and publishes it as a live site. Updating your docs works like updating code: you edit files, push, and the site updates.
+
+In this tutorial, you will build a small documentation site with Thally, using an unofficial Paystack documentation site as the example. You will create the site, run it locally, customize the pages and navigation, and publish your changes. The same steps work for any product.
+
+## Prerequisites
+
+- A GitHub account and basic familiarity with Git commands
+- Node.js installed on your local machine
+- Basic understanding of Markdown
+
+## Create your Thally site
+
+**Outcome:** a live documentation site built from the Thally starter template.
+<Steps>
+<Step title="Create a documentation repository">
+
+Log in to [GitHub](https://github.com/login) and create a new repository for your documentation. This is where your docs site lives.
+
+</Step>
+
+<Step title="Sign up for Thally Cloud">
+
+Sign up for a [Thally Cloud account](https://app.thally.io/). Signing in with GitHub speeds this up.
+
+</Step>
+
+<Step title="Enter your project details">
+
+Enter your project name, your role, and your company size. This helps Thally understand your project.
+
+</Step>
+
+<Step title="Name your site">
+
+Enter your documentation site name and a one-line summary.
+
+</Step>
+
+<Step title="Connect GitHub">
+
+Select **Create a new docs repository**, then click **Check GitHub** to install the Thally GitHub App on your account.
+
+</Step>
+
+<Step title="Authorize Thally">
+
+Click **Continue** to authorize Thally to access your GitHub account.
+
+</Step>
+
+<Step title="Choose your repository">
+
+Choose **Only select repositories** and select the documentation repository you created in step 1.
+
+</Step>
+
+<Step title="Install the starter template">
+
+Click **Install** to add the Thally starter template to the repository. If GitHub asks, enter your password to confirm.
+
+</Step>
+
+<Step title="Continue with a new repository">
+
+On the Thally setup page, click **Continue with a new repository**.
+
+</Step>
+
+<Step title="Skip the optional sources">
+
+Skip the product source repository option, which is for product documentation. Skip the knowledge surface option too.
+
+</Step>
+
+<Step title="Publish your site">
+
+Click **Publish site**. Thally takes you to your Cloud workspace.
+
+</Step>
+
+<Step title="View your live site">
+
+Scroll to the **Site at a glance** section and click **View live site**.
+![Thally template live site](/images/Thally-template-live-site.png)
+</Step>
+</Steps>
+
+## Run the site locally
+
+**Outcome:** preview your site on your machine.
+
+<Steps>
+<Step title="Clone the repository">
+
+Clone your documentation repository to your local machine.
+
+</Step>
+
+<Step title="Install dependencies">
+
+```bash
+npm install
+```
+
+</Step>
+
+<Step title="Start the preview">
+
+```bash
+npm run dev
+```
+
+</Step>
+
+<Step title="Open the site">
+
+Copy the localhost URL from the terminal, for example `http://localhost:3040`, and paste it into your browser.
+
+</Step>
+</Steps>
+
+## Customize your first page
+
+**Outcome:** replace the template's introduction page with your own content.
+
+<Steps>
+<Step title="Open the introduction page">
+
+In your project, open the introduction page inside `src/content/introduction.mdx`.
+
+</Step>
+
+<Step title="Update the frontmatter">
+
+Replace the frontmatter with your page metadata:
+
+```mdx
+---
+title: Introduction
+description: Paystack is a payment gateway that helps businesses accept online payments from anywhere in the world.
+keywords: home
+---
+```
+
+See the [Thally frontmatter guide](https://docs.thally.io/guides/frontmatter-reference) for all available fields.
+
+</Step>
+
+<Step title="Remove the template content">
+
+Delete the templated content on the page. You can also remove the `Hero` component.
+
+</Step>
+
+<Step title="Add your content">
+
+Add headings, images, tabs, cards, accordions, and more. 
+
+For example, this adds three clickable cards:
+
+```mdx
+## What you can do with Paystack
+
+<CardGroup cols="2">
+  <Card title="Accept one-time payments" icon="fa-solid fa-bolt" href="/quickstart">
+      Collect a single payment through card, bank transfer, and USSD.
+
+      **Best for**: E-commerce stores, service providers, and hospitality and travel platforms.
+   </Card>
+  <Card title="Accept recurring payments" icon="fa-solid fa-snowflake" href="/customization">
+      Charge customers automatically on a schedule.
+
+      **Best for**: SaaS, educational platforms, and digital media platforms.
+
+    </Card>
+    <Card title="3. Split payments" icon="fa-solid fa-layer-group" href="/api">
+      Share a single payment between your business and one or more vendors.
+    
+      **Best for**: Marketplaces, food delivery platforms, and service providers.
+    </Card>
+</CardGroup>
+```
+
+| Element | What it does |
+| --- | --- |
+| `##` | Creates a level 2 heading |
+| `CardGroup` | Arranges cards in columns, here two |
+| `Card` | Creates one clickable card with a title, icon, and link |
+![Thally's documentation page output](/images/Thally-cards.png)
+
+Explore [Components](https://docs.thally.io/components/badge) in the Thally documentation to see what else you can add.
+
+</Step>
+</Steps>
+
+## Create a guide
+
+**Outcome:** add a how-to guide and show it in the navigation.
+
+<Steps>
+<Step title="Create the page file">
+
+In `src/content/guides`, create a new `.mdx` file, for example `verify-payments-with-webhooks.mdx`.
+
+</Step>
+
+<Step title="Add the frontmatter">
+
+```mdx
+---
+title: How to Verify Payments With Webhooks
+description: Use Paystack webhooks to confirm payments automatically and troubleshoot common errors.
+---
+```
+
+</Step>
+
+<Step title="Write your content">
+
+Thally supports components such as steps, callouts, and collapsible sections. For example, this creates numbered steps:
+
+```mdx
+<Steps>
+  <Step title="Create the webhook file">
+    Create a new `webhook.js` file in your `controller` folder.
+  </Step>
+  <Step title="Verify the webhook signature">
+    Create a `webhook` function that checks the Paystack signature.
+  </Step>
+</Steps>
+```
+
+</Step>
+
+<Step title="Open docs.json">
+
+Open `docs.json` and find the `tabs` section. It controls how pages appear in the site navigation.
+
+</Step>
+
+<Step title="Add your page to the navigation">
+
+In the `pages` array, add your page using its file path without the extension, and remove the template guides you don't need:
+
+```json
+{
+  "tab": "Guides",
+  "groups": [
+    {
+      "group": "Guides",
+      "pages": ["guides/verify-payments-with-webhooks"]
+    }
+  ]
+}
+```
+
+</Step>
+
+<Step title="Preview your page">
+
+Run `npm run dev` and confirm the new page appears in the navigation.
+
+</Step>
+</Steps>
+
+## Publish your changes
+
+**Outcome:** push your changes and see them on the live site.
+
+<Steps>
+<Step title="Check your content">
+
+Run the Thally content check before you go live:
+
+```bash
+npx --yes @thallylabs/cli@latest check
+```
+</Step>
+
+<Step title="Build the site">
+
+Compile the site for production. This catches errors that the dev preview doesn't report:
+
+```bash
+npm run build
+```
+
+</Step>
+
+<Step title="Commit and push">
+
+```bash
+git add .
+git commit -m "Add documentation pages"
+git push origin main
+```
+
+</Step>
+
+<Step title="View your changes">
+
+Open your [Thally Cloud dashboard](https://app.thally.io/dashboard), wait for the deployment to finish, and click **View live site**.
+
+</Step>
+</Steps>
+
+## Troubleshoot common issues
+
+<Expandable title="Changes don't appear in the local preview">
+  Stop the app with `Ctrl+C` and run `npm run dev` again.
+</Expandable>
+
+<Expandable title="npm run build fails with Failed to compile runtime MDX">
+  The error names the file but not the line. Scroll down in the output to find the `line` and `column` values in the error details. They point to where parsing failed, so the unclosed tag is usually a few lines above. Check that every `Steps`, `Step`, and other tag is closed.
+
+  Example error:
+
+  ```text
+  Failed to compile runtime MDX src/content/guides/verify-payments-with-webhooks.mdx: Unexpected character `#` (U+0023) after name
+  ```
+</Expandable>
+
